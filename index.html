@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GPA Calculator</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --text: #172033;
+        --muted: #5b667a;
+        --line: #dce3ee;
+        --accent: #14786a;
+        --accent-dark: #0f5f54;
+        --danger: #b42318;
+        --shadow: 0 18px 40px rgba(23, 32, 51, 0.10);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(20, 120, 106, 0.18), transparent 34rem),
+          linear-gradient(135deg, #f6f8fb 0%, #edf3f7 100%);
+      }
+
+      main {
+        width: min(960px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0;
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 4rem);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.5;
+        max-width: 62ch;
+      }
+
+      .calculator {
+        display: grid;
+        gap: 18px;
+        padding: 20px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .stat strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 1.8rem;
+      }
+
+      .courses {
+        display: grid;
+        gap: 10px;
+      }
+
+      .course-row,
+      .course-header {
+        display: grid;
+        grid-template-columns: minmax(130px, 1fr) 110px 130px 42px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .course-header {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      input,
+      select,
+      button {
+        min-height: 42px;
+        font: inherit;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 0 12px;
+        color: var(--text);
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        outline: none;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(20, 120, 106, 0.18);
+      }
+
+      button {
+        display: inline-grid;
+        place-items: center;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .primary {
+        padding: 0 16px;
+        color: #ffffff;
+        background: var(--accent);
+      }
+
+      .primary:hover {
+        background: var(--accent-dark);
+      }
+
+      .secondary {
+        padding: 0 16px;
+        color: var(--accent-dark);
+        background: #e8f4f1;
+      }
+
+      .remove {
+        color: var(--danger);
+        background: #fff1f0;
+        border: 1px solid #ffd2ce;
+      }
+
+      .remove:hover {
+        background: #ffe4e1;
+      }
+
+      .empty-note {
+        display: none;
+        padding: 12px;
+        color: var(--muted);
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .empty .empty-note {
+        display: block;
+      }
+
+      @media (max-width: 720px) {
+        main {
+          width: min(100% - 24px, 960px);
+          padding: 24px 0;
+        }
+
+        .summary {
+          grid-template-columns: 1fr;
+        }
+
+        .course-header {
+          display: none;
+        }
+
+        .course-row {
+          grid-template-columns: 1fr 1fr 42px;
+          padding: 12px;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: #fbfcfe;
+        }
+
+        .course-row input[name="course"] {
+          grid-column: 1 / -1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>GPA Calculator</h1>
+        <p>Add your courses, choose the credit hours and grades, and get your GPA instantly.</p>
+      </header>
+
+      <section class="calculator" aria-label="GPA calculator">
+        <div class="summary" aria-live="polite">
+          <div class="stat">
+            <span>GPA</span>
+            <strong id="gpa">0.00</strong>
+          </div>
+          <div class="stat">
+            <span>Credits</span>
+            <strong id="credits">0</strong>
+          </div>
+          <div class="stat">
+            <span>Courses</span>
+            <strong id="courseCount">0</strong>
+          </div>
+        </div>
+
+        <div class="courses" id="courses">
+          <div class="course-header" aria-hidden="true">
+            <span>Course</span>
+            <span>Credits</span>
+            <span>Grade</span>
+            <span></span>
+          </div>
+        </div>
+
+        <p class="empty-note" id="emptyNote">No courses yet.</p>
+
+        <div class="actions">
+          <button class="primary" id="addCourse" type="button">Add Course</button>
+          <button class="secondary" id="reset" type="button">Reset</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const grades = [
+        ["A+", 4.0],
+        ["A", 4.0],
+        ["A-", 3.7],
+        ["B+", 3.3],
+        ["B", 3.0],
+        ["B-", 2.7],
+        ["C+", 2.3],
+        ["C", 2.0],
+        ["C-", 1.7],
+        ["D+", 1.3],
+        ["D", 1.0],
+        ["F", 0.0]
+      ];
+
+      const courses = document.querySelector("#courses");
+      const gpaOutput = document.querySelector("#gpa");
+      const creditsOutput = document.querySelector("#credits");
+      const courseCountOutput = document.querySelector("#courseCount");
+      const calculator = document.querySelector(".calculator");
+
+      function createGradeOptions(selected = "A") {
+        return grades
+          .map(([grade, points]) => {
+            const isSelected = grade === selected ? "selected" : "";
+            return `<option value="${points}" ${isSelected}>${grade}</option>`;
+          })
+          .join("");
+      }
+
+      function addCourse(name = "", credits = 3, grade = "A") {
+        const row = document.createElement("div");
+        row.className = "course-row";
+        row.innerHTML = `
+          <input name="course" type="text" placeholder="Course name" value="${name}">
+          <input name="credits" type="number" min="0" step="0.5" value="${credits}" aria-label="Credit hours">
+          <select name="grade" aria-label="Grade">${createGradeOptions(grade)}</select>
+          <button class="remove" type="button" aria-label="Remove course">x</button>
+        `;
+
+        row.querySelector(".remove").addEventListener("click", () => {
+          row.remove();
+          calculateGpa();
+        });
+
+        row.querySelectorAll("input, select").forEach((field) => {
+          field.addEventListener("input", calculateGpa);
+        });
+
+        courses.appendChild(row);
+        calculateGpa();
+      }
+
+      function calculateGpa() {
+        const rows = [...document.querySelectorAll(".course-row")];
+        let totalCredits = 0;
+        let totalPoints = 0;
+
+        rows.forEach((row) => {
+          const credits = Number(row.querySelector('[name="credits"]').value) || 0;
+          const points = Number(row.querySelector('[name="grade"]').value) || 0;
+          totalCredits += credits;
+          totalPoints += credits * points;
+        });
+
+        const gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
+        gpaOutput.textContent = gpa.toFixed(2);
+        creditsOutput.textContent = totalCredits.toString();
+        courseCountOutput.textContent = rows.length.toString();
+        calculator.classList.toggle("empty", rows.length === 0);
+      }
+
+      document.querySelector("#addCourse").addEventListener("click", () => addCourse());
+      document.querySelector("#reset").addEventListener("click", () => {
+        document.querySelectorAll(".course-row").forEach((row) => row.remove());
+        addCourse("Math", 3, "A");
+        addCourse("English", 3, "B+");
+        addCourse("Science", 4, "A-");
+      });
+
+      addCourse("Math", 3, "A");
+      addCourse("English", 3, "B+");
+      addCourse("Science", 4, "A-");
+    </script>
+  </body>
+</html>
